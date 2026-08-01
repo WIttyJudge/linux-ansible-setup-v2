@@ -1,0 +1,70 @@
+---
+- name: Configure /etc/pacman.conf
+  ansible.builtin.lineinfile:
+    path: /etc/pacman.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    backrefs: "{{ item.backrefs }}"
+    state: present
+  loop:
+    - { line: Color, regexp: "^#?Color$", backrefs: true }
+    - { line: ILoveCandy, regexp: "^#?ILoveCandy$", backrefs: true }
+    - {
+        line: ParallelDownloads = 5,
+        regexp: "#ParallelDownloads",
+        backrefs: true,
+      }
+  become: true
+
+- name: Enable multilib repository in /etc/pacman.conf
+  ansible.builtin.replace:
+    path: /etc/pacman.conf
+    regexp: '^#\[multilib\]\n#Include = /etc/pacman\.d/mirrorlist$'
+    replace: "[multilib]\nInclude = /etc/pacman.d/mirrorlist"
+  become: true
+
+- name: Disable beep sound
+  ansible.builtin.shell: |
+    rmmod pcspkr
+    echo "blacklist pcspkr" > /etc/modprobe.d/nobeep.conf
+    echo "blacklist snd_pcsp" >> /etc/modprobe.d/nobeep.conf
+  become: true
+  ignore_errors: true
+
+- name: Install required packages
+  ansible.builtin.package:
+    name:
+      - base-devel
+      - git
+    state: present
+
+- name: Check if yay is installed
+  ansible.builtin.command: which yay
+  register: yay_check
+  changed_when: false
+  failed_when: false
+
+- name: Build and install yay
+  when: yay_check.rc != 0
+  become: false
+  block:
+    - name: Create temporary yay directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: yay
+      register: yay_tmp
+
+    - name: Clone yay repository
+      ansible.builtin.git:
+        repo: https://aur.archlinux.org/yay.git
+        dest: "{{ yay_tmp.path }}"
+
+    - name: Building yay
+      ansible.builtin.command:
+        cmd: makepkg -si --noconfirm
+        chdir: "{{ yay_tmp.path }}"
+
+    - name: Remove temporary yay directory
+      ansible.builtin.file:
+        path: "{{ yay_tmp.path }}"
+        state: absent

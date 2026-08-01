@@ -1,0 +1,16 @@
+---
+- name: Bootstrap a fresh Arch Linux install
+  hosts: local
+
+  vars_files:
+    - custom.yml
+    - secret.yml
+
+  roles:
+    - role: system
+      tags:
+        - system
+
+    - role: dotfiles
+      tags:
+        - dotfiles

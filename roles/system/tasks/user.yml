@@ -1,0 +1,51 @@
+---
+- name: Make sure we have 'wheel,docker' groups
+  ansible.builtin.group:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - wheel
+    - docker
+  become: true
+
+- name: Ensure sudoers reads drop-in files from /etc/sudoers.d
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    regexp: '^#?\s*@includedir\s+/etc/sudoers\.d'
+    line: "@includedir /etc/sudoers.d"
+    validate: visudo -cf %s
+  become: true
+
+- name: Allow 'wheel' group to have passwordless sudo
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/10-wheel
+    content: "%wheel ALL=(ALL:ALL) NOPASSWD: ALL\n"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: visudo -cf %s
+  become: true
+
+- name: Create new user
+  ansible.builtin.user:
+    name: "{{ username }}"
+    password: "{{ user_password | password_hash('sha512', 65534 | random(seed=username) | string) }}"
+    create_home: true
+    shell: /usr/bin/zsh
+    groups:
+      - wheel
+      - users
+      - input
+      - network
+      - docker
+    append: true
+    state: present
+  become: true
+  register: new_user
+  when: create_new_user | default(false)
+
+- name: Expose the newly created user for downstream tasks
+  ansible.builtin.set_fact:
+    effective_user_id: "{{ new_user.name }}"
+    effective_user_dir: "{{ new_user.home }}"
+  when: new_user.name is defined

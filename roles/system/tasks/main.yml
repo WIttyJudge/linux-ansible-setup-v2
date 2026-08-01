@@ -1,0 +1,19 @@
+---
+- name: Setup user related settings
+  ansible.builtin.include_tasks: user.yml
+
+- name: Arch Linux specific tasks
+  ansible.builtin.include_tasks: archlinux.yml
+  when: ansible_facts['os_family'] == "Archlinux"
+
+- name: Create user directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ effective_user_dir | default(ansible_facts.user_dir) }}/projects/golang/src"
+    - "{{ effective_user_dir | default(ansible_facts.user_dir) }}/projects/work"
+    - "{{ effective_user_dir | default(ansible_facts.user_dir) }}/Pictures/screenshots"
+  become: true
+  become_user: "{{ effective_user_id | default(ansible_facts.user_id) }}"
