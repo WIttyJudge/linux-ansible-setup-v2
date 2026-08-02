@@ -104,6 +104,8 @@ run_playbook() {
   read -rp "Run the playbook now? [y/N]: " answer
   if [[ "$answer" =~ ^[yY]$ ]]; then
     ansible-playbook "$work_dir/bootstrap.yml" --tags "$tags"
+    echo
+    echo "[i] Done. See README.md for next steps."
   else
     echo "[i] Skipped. Run later with: ansible-playbook bootstrap.yml --tags $tags"
   fi
