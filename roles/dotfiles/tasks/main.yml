@@ -1,9 +1,16 @@
 ---
-- name: Clone dotfiles repository
+- name: Check if dotfiles repository already exists
+  ansible.builtin.stat:
+    path: "{{ effective_user_dir | default(ansible_facts.user_dir) }}/dotfiles/.git"
+  register: dotfiles_repo
   become: true
   become_user: "{{ effective_user_id | default(ansible_facts.user_id) }}"
+
+- name: Clone dotfiles repository
   ansible.builtin.git:
     repo: https://github.com/WIttyJudge/dotfiles.git
     dest: "{{ effective_user_dir | default(ansible_facts.user_dir) }}/dotfiles"
     version: main
-    update: true
+  when: not dotfiles_repo.stat.exists
+  become: true
+  become_user: "{{ effective_user_id | default(ansible_facts.user_id) }}"
