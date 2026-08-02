@@ -41,11 +41,11 @@
     append: true
     state: present
   become: true
-  register: new_user
+  register: system_new_user
   when: create_new_user | default(false)
 
 - name: Expose the newly created user for downstream tasks
   ansible.builtin.set_fact:
-    effective_user_id: "{{ new_user.name }}"
-    effective_user_dir: "{{ new_user.home }}"
-  when: new_user.name is defined
+    system_effective_user_id: "{{ system_new_user.name }}"
+    system_effective_user_dir: "{{ system_new_user.home }}"
+  when: system_new_user.name is defined
