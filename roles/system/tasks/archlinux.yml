@@ -47,16 +47,24 @@
         group: root
         mode: "0644"
 
-- name: Disable beep sound - blacklist pcspkr and snd_pcsp modules
-  ansible.builtin.copy:
-    dest: /etc/modprobe.d/nobeep.conf
-    content: |
-      blacklist pcspkr
-      blacklist snd_pcsp
-    owner: root
-    group: root
-    mode: "0644"
+- name: Setup reflector
   become: true
+  block:
+    - name: Install reflector package
+      ansible.builtin.package:
+        name: reflector
+        state: present
+
+    - name: Generate mirrorlist with reflector
+      ansible.builtin.command:
+        cmd: reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
+      changed_when: true
+
+    - name: Enable and start reflector timer
+      ansible.builtin.systemd_service:
+        name: reflector.timer
+        enabled: true
+        state: started
 
 - name: Install required packages
   ansible.builtin.package:
