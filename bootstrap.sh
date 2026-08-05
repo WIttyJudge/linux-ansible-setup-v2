@@ -3,6 +3,9 @@
 # Prepares a fresh Arch Linux root shell to run the Ansible playbook:
 # installs Ansible, collects the new user's credentials, then hands off.
 
+# 1. exit on error.
+# 2. treat unset variables as an error.
+# 3. the same as 1., but for pipes.
 set -euo pipefail
 
 tags="${1:-all}"
@@ -113,7 +116,7 @@ run_playbook() {
 
 require_root
 require_arch
-# install_ansible
+install_ansible
 
 clear
 welcome_message
