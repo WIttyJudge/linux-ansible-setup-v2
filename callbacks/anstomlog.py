@@ -226,14 +226,35 @@ class CallbackModule(CallbackBase):
 
         return "%s | %s | %s | rc=%s" % (hostname, caption, duration, result.get('rc', 0))
 
+    @staticmethod
+    def _get_named_block(task):
+        parent = task._parent
+        if parent is not None and hasattr(parent, 'block') and parent.name:
+            return parent
+        return None
+
+    def _emit_block_header(self, text):
+        ts = datetime.now().strftime("%H:%M:%S")
+        self._display.display("[{}] {}".format(ts, text), color=C.COLOR_OK)
+
     def v2_playbook_on_task_start(self, task, is_conditional):
         parentTask = task.get_first_parent_include()
         if parentTask is not None:
             sectionName = task._role.get_name()
             if parentTask.action.endswith('tasks'):
                 sectionName = os.path.splitext(os.path.basename(task.get_path()))[0]
-            self._open_section("  ↳ {} : {}".format(sectionName, task.name))
+
+            namedBlock = self._get_named_block(task)
+            if namedBlock is not None:
+                if namedBlock._uuid != self._last_block_uuid:
+                    self._last_block_uuid = namedBlock._uuid
+                    self._emit_block_header("  ↳ {} : {}".format(sectionName, namedBlock.name))
+                self._open_section("    ↳ {}".format(task.name))
+            else:
+                self._last_block_uuid = None
+                self._open_section("  ↳ {} : {}".format(sectionName, task.name))
         else:
+            self._last_block_uuid = None
             self._open_section(task.get_name(), task.get_path())
 
     def _open_section(self, section_name, path=None):
@@ -397,6 +418,7 @@ class CallbackModule(CallbackBase):
         super(CallbackModule, self).__init__(*args, **kwargs)
         self.task_started = datetime.now()
         self.task_start_preamble = None
+        self._last_block_uuid = None
         # python2 only
         try:
             reload(sys).setdefaultencoding('utf8')
