@@ -25,15 +25,27 @@
     replace: "[multilib]\nInclude = /etc/pacman.d/mirrorlist"
   become: true
 
-- name: Disable beep sound - disable pcspkr and snd_pcsp kernel modules
-  community.general.modprobe:
-    name: "{{ item }}"
-    state: absent
-  loop:
-    - pcspkr
-    - snd_pcsp
+- name: Disable beep sound
   become: true
-  failed_when: false
+  block:
+    - name: Disable pcspkr and snd_pcsp kernel modules
+      community.general.modprobe:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - pcspkr
+        - snd_pcsp
+      failed_when: false
+
+    - name: Blacklist pcspkr and snd_pcsp modules
+      ansible.builtin.copy:
+        dest: /etc/modprobe.d/nobeep.conf
+        content: |
+          blacklist pcspkr
+          blacklist snd_pcsp
+        owner: root
+        group: root
+        mode: "0644"
 
 - name: Disable beep sound - blacklist pcspkr and snd_pcsp modules
   ansible.builtin.copy:
