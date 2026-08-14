@@ -54,6 +54,7 @@
       ansible.builtin.package:
         name: reflector
         state: present
+        update_cache: true
 
     - name: Generate mirrorlist with reflector
       ansible.builtin.command:
