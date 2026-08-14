@@ -72,6 +72,9 @@
     name:
       - base-devel
       - git
+      - openssh
+      - tree-sitter
+      - tree-sitter-cli
     state: present
 
 - name: Check if yay is installed

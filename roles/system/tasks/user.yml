@@ -26,6 +26,12 @@
     validate: visudo -cf %s
   become: true
 
+- name: Install zsh package
+  ansible.builtin.package:
+    name: zsh
+    state: present
+  become: true
+
 - name: Create new user
   ansible.builtin.user:
     name: "{{ username }}"
