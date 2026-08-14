@@ -2,6 +2,12 @@
 - name: Setup user related settings
   ansible.builtin.include_tasks: user.yml
 
+- name: Install zsh package
+  ansible.builtin.package:
+    name: zsh
+    state: present
+  become: true
+
 - name: Arch Linux specific tasks
   ansible.builtin.include_tasks: archlinux.yml
   when: ansible_facts['os_family'] == "Archlinux"
