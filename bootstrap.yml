@@ -14,3 +14,7 @@
     - role: dotfiles
       tags:
         - dotfiles
+
+    - role: wallpapers
+      tags:
+        - wallpapers

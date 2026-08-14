@@ -8,6 +8,7 @@
 # 3. the same as 1., but for pipes.
 set -euo pipefail
 
+tags="${1:-all}"
 work_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 custom_file="$work_dir/custom.yml"
 secret_file="$work_dir/secret.yml"
@@ -109,11 +110,11 @@ run_playbook() {
   echo
   read -rp "Run the playbook now? [y/N]: " answer
   if [[ "$answer" =~ ^[yY]$ ]]; then
-    ansible-playbook --ask-vault-pass "$work_dir/bootstrap.yml"
+    ansible-playbook --ask-vault-pass "$work_dir/bootstrap.yml" --tags "$tags"
     echo
     echo "[i] Done. See README.md for next steps."
   else
-    echo "[i] Skipped. Run later with: ansible-playbook bootstrap.yml"
+    echo "[i] Skipped. Run later with: ansible-playbook bootstrap.yml --tags $tags"
   fi
 }
 

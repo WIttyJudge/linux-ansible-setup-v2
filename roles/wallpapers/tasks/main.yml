@@ -1,0 +1,16 @@
+---
+- name: Check if wallpapers repository already exists
+  ansible.builtin.stat:
+    path: "{{ system_effective_user_dir | default(ansible_facts.user_dir) }}/Pictures/wallpapers/.git"
+  register: wallpapers_repo
+  become: true
+  become_user: "{{ system_effective_user_id | default(ansible_facts.user_id) }}"
+
+- name: Clone wallpapers repository
+  ansible.builtin.git:
+    repo: https://github.com/wittyjudge/wallpapers.git
+    dest: "{{ system_effective_user_dir | default(ansible_facts.user_dir) }}/Pictures/wallpapers"
+    version: main
+  when: not wallpapers_repo.stat.exists
+  become: true
+  become_user: "{{ system_effective_user_id | default(ansible_facts.user_id) }}"
