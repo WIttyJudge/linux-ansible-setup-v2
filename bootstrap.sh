@@ -8,7 +8,6 @@
 # 3. the same as 1., but for pipes.
 set -euo pipefail
 
-tags="${1:-all}"
 work_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 custom_file="$work_dir/custom.yml"
 secret_file="$work_dir/secret.yml"
@@ -27,7 +26,7 @@ require_arch() {
   fi
 }
 
-install_ansible() {
+install_required_packages() {
   echo "[i] Installing Ansible"
   sudo pacman -Sy --needed --noconfirm ansible
   ansible-galaxy install -r "$work_dir/requirements.yml"
@@ -102,21 +101,25 @@ write_vars() {
   fi
 }
 
+encrypt_secret() {
+  ansible-vault encrypt "$secret_file"
+}
+
 run_playbook() {
   echo
   read -rp "Run the playbook now? [y/N]: " answer
   if [[ "$answer" =~ ^[yY]$ ]]; then
-    ansible-playbook "$work_dir/bootstrap.yml" --tags "$tags"
+    ansible-playbook --ask-vault-pass "$work_dir/bootstrap.yml"
     echo
     echo "[i] Done. See README.md for next steps."
   else
-    echo "[i] Skipped. Run later with: ansible-playbook bootstrap.yml --tags $tags"
+    echo "[i] Skipped. Run later with: ansible-playbook bootstrap.yml"
   fi
 }
 
 require_root
 require_arch
-install_ansible
+install_required_packages
 
 clear
 welcome_message
@@ -128,4 +131,6 @@ if [[ "$create_new_user" == "true" ]]; then
 fi
 
 write_vars
+encrypt_secret
+
 run_playbook
