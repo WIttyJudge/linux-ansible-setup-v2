@@ -77,6 +77,12 @@
       - tree-sitter-cli
     state: present
 
+- name: Install CPU microcode package
+  ansible.builtin.package:
+    name: "{{ 'intel-ucode' if 'GenuineIntel' in ansible_facts.processor else 'amd-ucode' }}"
+    state: present
+  become: true
+
 - name: Check if yay is installed
   ansible.builtin.command: which yay
   register: system_yay_check
